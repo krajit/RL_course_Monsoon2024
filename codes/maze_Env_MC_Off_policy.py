@@ -1,14 +1,14 @@
 from typing import Tuple, Dict, Iterable, Optional
-
 import numpy as np
 import gym
 from gym import spaces
 import pygame
 from pygame import gfxdraw
+from collections import defaultdict
 
 
+# Environment Definition
 class Maze(gym.Env):
-
     def __init__(self, exploring_starts: bool = False,
                  shaped_rewards: bool = False, size: int = 5) -> None:
         super().__init__()
@@ -23,6 +23,10 @@ class Maze(gym.Env):
         self.observation_space = spaces.MultiDiscrete([size, size])
 
         self.screen = None
+        self.font = None  # Initialize font attribute
+        self.current_episode = 0  # Initialize current_episode attribute
+
+
 
     def step(self, action: int) -> Tuple[Tuple[int, int], float, bool, Dict]:
         reward = self.compute_reward(self.state, action)
@@ -49,6 +53,7 @@ class Maze(gym.Env):
             pygame.init()  # Initialize Pygame
             self.screen = pygame.display.set_mode((screen_size, screen_size))
             pygame.display.set_caption('Maze Environment')
+            self.font = pygame.font.SysFont(None, 36)  # Initialize font
 
         surf = pygame.Surface((screen_size, screen_size))
         surf.fill((22, 36, 71))
@@ -75,10 +80,20 @@ class Maze(gym.Env):
         agent_col = int(scale * (self.state[1] + .5))
         gfxdraw.filled_circle(surf, agent_col, agent_row, int(scale * .6 / 2), (228, 63, 90))
 
+        # Flip the surface before adding the text
         surf = pygame.transform.flip(surf, False, True)
+
+        # Render the episode number after flipping the surface
+        episode_text = self.font.render(f"Episode: {self.current_episode}", True, (255, 255, 255))
+        surf.blit(episode_text, (10, 10))  # Position the text at the top-left corner
+
         self.screen.blit(surf, (0, 0))
 
         pygame.display.flip()
+
+       
+
+#        pygame.display.flip()
 
         if mode == 'rgb_array':
             return np.transpose(
@@ -173,31 +188,26 @@ if __name__ == "__main__":
    
         
     # placeholder for saving q(s,a)s
-    q = {} 
+    q = defaultdict(lambda: defaultdict(lambda: {"val": -20 * np.random.rand(), "count": 1}))
+
 
     # policy function
     def pi(state, epsilon = 0.1):
-        # is state note visited before return a random action
-        if state not in q:
-            q[state] = {}                      # add state in q
-            action =  env.action_space.sample()   # return a random action
-         
-        elif np.random.rand() < epsilon:            # with epsilon probability return random action
+        if np.random.rand() < epsilon:            # with epsilon probability return random action
             action = env.action_space.sample()
         else:
-            action = max(q[state], key = q[state].get)  # return action with highest value
-        
-        q[state][action] = 0.0
-        return action 
+            #action = max(q[state], key = q[state].get)  # return action with highest value
+            action = max(q[state], key=lambda a: q[state][a]["val"])
+        return action
 
-    
-    def generateOneEpisode(wantToView = False):
+    def generateOneEpisode(wantToView = False, epsilon = 0):
         state = env.reset()
-        episode = [(state)]
+        if state not in q: q[state] = {}
         if wantToView:
             env.render()
-
-    
+        
+        episode = []
+   
         done = False
         while not done:
             if wantToView:
@@ -205,30 +215,41 @@ if __name__ == "__main__":
                     if event.type == pygame.QUIT:
                         running = False
 
-            action = pi(state)
-            actionMeaning = env.action_space.action_meanings[action]
-            state, reward, done, _ = env.step(action)
-            episode.append((action,reward,state))
+            action = pi(state,epsilon=epsilon)
+            
+
+ #          actionMeaning = env.action_space.action_meanings[action]
+            newState, reward, done, _ = env.step(action)
+            
+            episode.append((state,action,reward))
+            state = newState
+            if state not in q:
+                q[state] = {}
 
             if wantToView:
                 env.render()  
-                time.sleep(0.01)
+                time.sleep(0.02)
+            #print(action, state, reward)
         return episode
 
-    # def generateEpisode():
-    #     state = env.reset()
-    #     episode = [(state)]
 
     gamma = 0.9
-    alpha = 0.01
 
     for i in range(20): # generate 20 episodes
-        episode = generateOneEpisode(wantToView=False)
+        print("Episode # ", i)
+        env.current_episode  = i
+        episode = generateOneEpisode(wantToView=True,epsilon = 1/(1+i))
         C = 0
-        for (action, reward,state) in reversed(episode[1:]):
+        for (state,action, reward) in reversed(episode):
+            if state not in q:
+                q[state] = {}
+            if action not in q[state]:
+                q[state][action] = {"val":-20*np.random.rand(), "count":1}
             C = reward + gamma*C
-            q[state][action] +=alpha*(C -q[state][action] ) 
 
+            q[state][action]["val"] +=(C -q[state][action]["val"] )/(q[state][action]["count"]) 
+            q[state][action]["count"] = q[state][action]["count"]+1 
 
+    # run on Trained agent
     generateOneEpisode(wantToView=True)
     print("done")

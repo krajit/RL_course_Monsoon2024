@@ -190,5 +190,11 @@ if __name__ == "__main__":
     env.close()
 
 
-# Exercise 
+# Exercise 1
 # Print the state and reward at each step
+
+# Exercise 2: 
+# Print the total return of your episode
+
+# Exercise 3: Add a discount variable gamma = 0.9
+# Modify your code to find the discounted return of your episode
