@@ -1,30 +1,14 @@
 from typing import Tuple, Dict, Iterable, Optional
-
 import numpy as np
 import gym
 from gym import spaces
 import pygame
 from pygame import gfxdraw
-import itertools, time
+from collections import defaultdict
 
-# Define color gradient
-START_COLOR = pygame.Color('red')
-END_COLOR = pygame.Color('blue')
 
-def interpolate_color(start_color, end_color, t):
-    """ Interpolate between start_color and end_color based on t (0 to 1) """
-    r = int(start_color.r + (end_color.r - start_color.r) * t)
-    g = int(start_color.g + (end_color.g - start_color.g) * t)
-    b = int(start_color.b + (end_color.b - start_color.b) * t)
-    return pygame.Color(r, g, b)
-
-def value_to_color(x):
-    """ Convert the value of x to a color """
-    t = (x + 1) / 1  # Normalize x from -10 to 0 to a range from 0 to 1
-    return interpolate_color(START_COLOR, END_COLOR, t)
-
+# Environment Definition
 class Maze(gym.Env):
-
     def __init__(self, exploring_starts: bool = False,
                  shaped_rewards: bool = False, size: int = 5) -> None:
         super().__init__()
@@ -39,6 +23,10 @@ class Maze(gym.Env):
         self.observation_space = spaces.MultiDiscrete([size, size])
 
         self.screen = None
+        self.font = None  # Initialize font attribute
+        self.current_episode = 0  # Initialize current_episode attribute
+
+
 
     def step(self, action: int) -> Tuple[Tuple[int, int], float, bool, Dict]:
         reward = self.compute_reward(self.state, action)
@@ -55,7 +43,7 @@ class Maze(gym.Env):
             self.state = (0, 0)
         return self.state
 
-    def render(self, mode: str = 'human', Q = None) -> Optional[np.ndarray]:
+    def render(self, mode: str = 'human') -> Optional[np.ndarray]:
         assert mode in ['human', 'rgb_array']
 
         screen_size = 600
@@ -65,6 +53,7 @@ class Maze(gym.Env):
             pygame.init()  # Initialize Pygame
             self.screen = pygame.display.set_mode((screen_size, screen_size))
             pygame.display.set_caption('Maze Environment')
+            self.font = pygame.font.SysFont(None, 36)  # Initialize font
 
         surf = pygame.Surface((screen_size, screen_size))
         surf.fill((22, 36, 71))
@@ -91,29 +80,20 @@ class Maze(gym.Env):
         agent_col = int(scale * (self.state[1] + .5))
         gfxdraw.filled_circle(surf, agent_col, agent_row, int(scale * .6 / 2), (228, 63, 90))
 
-        if Q != None:
-            for (i,j,a) in Q:
-                xi = scale*i+scale//2
-                yi = scale*j+scale//2
-                h = scale//4
-                # action meaning: {0: 'UP', 1: 'RIGHT', 2: 'DOWN', 3: "LEFT"}
-                if a==0: #up
-                    gfxdraw.filled_polygon(surf, [(xi, yi+2*h), (xi-h, yi+h), (xi+h, yi+h)], value_to_color(Q[(i,j,a)]))
-                elif a==1: #right
-                    gfxdraw.filled_polygon(surf, [(xi+2*h, yi), (xi+h, yi+h), (xi+h, yi-h)], value_to_color(Q[(i,j,a)]))
-                elif a==2: #down
-                    gfxdraw.filled_polygon(surf, [(xi, yi-2*h), (xi-h, yi-h), (xi+h, yi-h)], value_to_color(Q[(i,j,a)]))
-                elif a==3: #left
-                    gfxdraw.filled_polygon(surf, [(xi-2*h, yi), (xi-h, yi-h), (xi-h, yi+h)], value_to_color(Q[(i,j,a)]))
-                else:
-                    raise("ValueError in action in Q")
-                    
-        
-
+        # Flip the surface before adding the text
         surf = pygame.transform.flip(surf, False, True)
+
+        # Render the episode number after flipping the surface
+        episode_text = self.font.render(f"Episode: {self.current_episode}", True, (255, 255, 255))
+        surf.blit(episode_text, (10, 10))  # Position the text at the top-left corner
+
         self.screen.blit(surf, (0, 0))
 
         pygame.display.flip()
+
+       
+
+#        pygame.display.flip()
 
         if mode == 'rgb_array':
             return np.transpose(
@@ -200,40 +180,76 @@ class Maze(gym.Env):
 import time
 # Running the environment and displaying the Pygame window
 
+# CODE STARTS RUNNING FROM HERE
 if __name__ == "__main__":
     env = Maze()
-    env.reset()
-    
+    state = env.reset()
+    env.render()
+   
+        
+    # placeholder for saving q(s,a)s
+    q = defaultdict(lambda: defaultdict(lambda: {"val": -20 * np.random.rand(), "count": 1}))
 
-    # # Event loop to keep the Pygame window open
-    # running = True
-    # env.render()  # Initialize the first render before entering the loop
 
-    # while running:
-    #     for event in pygame.event.get():
-    #         if event.type == pygame.QUIT:
-    #             running = False
+    # policy function
+    def pi(state, epsilon = 0.1):
+        if np.random.rand() < epsilon:            # with epsilon probability return random action
+            action = env.action_space.sample()
+        else:
+            #action = max(q[state], key = q[state].get)  # return action with highest value
+            action = max(q[state], key=lambda a: q[state][a]["val"])
+        return action
 
-    #     env.render()  # Render the environment
-    #     pygame.time.wait(100)
+    def generateOneEpisode(wantToView = False, epsilon = 0):
+        state = env.reset()
+        if state not in q: q[state] = {}
+        if wantToView:
+            env.render()
+        
+        episode = []
+   
+        done = False
+        while not done:
+            if wantToView:
+                for event in pygame.event.get():
+                    if event.type == pygame.QUIT:
+                        running = False
 
-    # env.close()
+            action = pi(state,epsilon=epsilon)
+            
 
-    Q = {(s1,s2,a): -10*np.random.rand() for (s1,s2,a) in itertools.product(range(5),range(5),range(4))}
+ #          actionMeaning = env.action_space.action_meanings[action]
+            newState, reward, done, _ = env.step(action)
+            
+            episode.append((state,action,reward))
+            state = newState
+            if state not in q:
+                q[state] = {}
 
-    env.render(Q=Q)
+            if wantToView:
+                env.render()  
+                time.sleep(0.02)
+            #print(action, state, reward)
+        return episode
 
-    done = False
-    while not done:
-        for event in pygame.event.get():
-            if event.type == pygame.QUIT:
-                running = False
 
-        action = np.random.randint(0,4)
-        actionMeaning = env.action_space.action_meanings[action]
-        _, _, done, _ = env.step(action)
-        env.render()  
-        time.sleep(0.05)
-    
+    gamma = 0.9
 
-    env.close()
+    for i in range(20): # generate 20 episodes
+        print("Episode # ", i)
+        env.current_episode  = i
+        episode = generateOneEpisode(wantToView=True,epsilon = 1/(1+i))
+        C = 0
+        for (state,action, reward) in reversed(episode):
+            if state not in q:
+                q[state] = {}
+            if action not in q[state]:
+                q[state][action] = {"val":-20*np.random.rand(), "count":1}
+            C = reward + gamma*C
+
+            q[state][action]["val"] +=(C -q[state][action]["val"] )/(q[state][action]["count"]) 
+            q[state][action]["count"] = q[state][action]["count"]+1 
+
+    # run on Trained agent
+    generateOneEpisode(wantToView=True)
+    print("done")

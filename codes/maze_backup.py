@@ -5,23 +5,7 @@ import gym
 from gym import spaces
 import pygame
 from pygame import gfxdraw
-import itertools, time
 
-# Define color gradient
-START_COLOR = pygame.Color('red')
-END_COLOR = pygame.Color('blue')
-
-def interpolate_color(start_color, end_color, t):
-    """ Interpolate between start_color and end_color based on t (0 to 1) """
-    r = int(start_color.r + (end_color.r - start_color.r) * t)
-    g = int(start_color.g + (end_color.g - start_color.g) * t)
-    b = int(start_color.b + (end_color.b - start_color.b) * t)
-    return pygame.Color(r, g, b)
-
-def value_to_color(x):
-    """ Convert the value of x to a color """
-    t = (x + 1) / 1  # Normalize x from -10 to 0 to a range from 0 to 1
-    return interpolate_color(START_COLOR, END_COLOR, t)
 
 class Maze(gym.Env):
 
@@ -55,7 +39,7 @@ class Maze(gym.Env):
             self.state = (0, 0)
         return self.state
 
-    def render(self, mode: str = 'human', Q = None) -> Optional[np.ndarray]:
+    def render(self, mode: str = 'human') -> Optional[np.ndarray]:
         assert mode in ['human', 'rgb_array']
 
         screen_size = 600
@@ -90,25 +74,6 @@ class Maze(gym.Env):
         agent_row = int(screen_size - scale * (self.state[0] + .5))
         agent_col = int(scale * (self.state[1] + .5))
         gfxdraw.filled_circle(surf, agent_col, agent_row, int(scale * .6 / 2), (228, 63, 90))
-
-        if Q != None:
-            for (i,j,a) in Q:
-                xi = scale*i+scale//2
-                yi = scale*j+scale//2
-                h = scale//4
-                # action meaning: {0: 'UP', 1: 'RIGHT', 2: 'DOWN', 3: "LEFT"}
-                if a==0: #up
-                    gfxdraw.filled_polygon(surf, [(xi, yi+2*h), (xi-h, yi+h), (xi+h, yi+h)], value_to_color(Q[(i,j,a)]))
-                elif a==1: #right
-                    gfxdraw.filled_polygon(surf, [(xi+2*h, yi), (xi+h, yi+h), (xi+h, yi-h)], value_to_color(Q[(i,j,a)]))
-                elif a==2: #down
-                    gfxdraw.filled_polygon(surf, [(xi, yi-2*h), (xi-h, yi-h), (xi+h, yi-h)], value_to_color(Q[(i,j,a)]))
-                elif a==3: #left
-                    gfxdraw.filled_polygon(surf, [(xi-2*h, yi), (xi-h, yi-h), (xi-h, yi+h)], value_to_color(Q[(i,j,a)]))
-                else:
-                    raise("ValueError in action in Q")
-                    
-        
 
         surf = pygame.transform.flip(surf, False, True)
         self.screen.blit(surf, (0, 0))
@@ -203,7 +168,7 @@ import time
 if __name__ == "__main__":
     env = Maze()
     env.reset()
-    
+    env.render()
 
     # # Event loop to keep the Pygame window open
     # running = True
@@ -218,10 +183,6 @@ if __name__ == "__main__":
     #     pygame.time.wait(100)
 
     # env.close()
-
-    Q = {(s1,s2,a): -10*np.random.rand() for (s1,s2,a) in itertools.product(range(5),range(5),range(4))}
-
-    env.render(Q=Q)
 
     done = False
     while not done:
