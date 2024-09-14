@@ -93,10 +93,10 @@ class Maze(gym.Env):
 
         if Q != None:
             for (i,j,a) in Q:
-                xi = scale*i+scale//2
-                yi = scale*j+scale//2
+                xi = scale*j+scale//2
+                yi = scale*(4-i)+scale//2
                 h = scale//4
-                #action meaning: {0: 'UP', 1: 'RIGHT', 2: 'DOWN', 3: "LEFT"}
+                # action meaning: {0: 'UP', 1: 'RIGHT', 2: 'DOWN', 3: "LEFT"}
                 if a==0: #up
                     gfxdraw.filled_polygon(surf, [(xi, yi+2*h), (xi-h, yi+h), (xi+h, yi+h)], value_to_color(Q[(i,j,a)]))
                 elif a==1: #right
@@ -107,7 +107,7 @@ class Maze(gym.Env):
                     gfxdraw.filled_polygon(surf, [(xi-2*h, yi), (xi-h, yi-h), (xi-h, yi+h)], value_to_color(Q[(i,j,a)]))
                 else:
                     raise("ValueError in action in Q")
-                    
+
         
 
         surf = pygame.transform.flip(surf, False, True)
@@ -219,27 +219,32 @@ if __name__ == "__main__":
 
     # env.close()
 
-    Q = {(s1,s2,a): -10*np.random.rand() for (s1,s2,a) in itertools.product(range(5),range(5),range(4))}
+#    Q = {(s1,s2,a): -10*np.random.rand() for (s1,s2,a) in itertools.product(range(5),range(5),range(4))}
+    Q = {(s1,s2,a): 0. for (s1,s2,a) in itertools.product(range(5),range(5),range(4))}
+    Q[1,0,0] = 1
+    Q[1,0,1] = 0.66
+    Q[1,0,2] = 0.33
+    Q[1,0,3] = 0
+
     
-    for (s1,s2) in  itertools.product(range(5),range(5)):
-        Qasum = sum([Q[s1,s2,aa] for aa in range(4)])
-        for a in range(4):
-            Q[s1,s2,a] = Q[s1,s2,a]/Qasum
 
 
     env.render(Q=Q)
 
-    done = False
-    while not done:
-        for event in pygame.event.get():
-            if event.type == pygame.QUIT:
-                running = False
+    # done = False
+    # while not done:
+    #     for event in pygame.event.get():
+    #         if event.type == pygame.QUIT:
+    #             running = False
 
-        action = np.random.randint(0,4)
-        actionMeaning = env.action_space.action_meanings[action]
-        _, _, done, _ = env.step(action)
-        env.render()  
-        time.sleep(0.05)
+    #     action = np.random.randint(0,4)
+    #     actionMeaning = env.action_space.action_meanings[action]
+    #     _, _, done, _ = env.step(action)
+    #     env.render()  
+    #     time.sleep(0.05)
     
 
-    env.close()
+    # env.close()
+
+
+print("done")

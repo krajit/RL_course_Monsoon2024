@@ -33,7 +33,7 @@ if __name__ == "__main__":
             action = max(q[state], key=lambda a: q[state][a]["val"])
         return action
 
-    def generateOneEpisode(wantToView = False, epsilon = 0):
+    def generateOneEpisode(Q,wantToView = False, epsilon = 0):
         state = env.reset()
         if wantToView:
             env.render(Q=Q)
@@ -57,7 +57,7 @@ if __name__ == "__main__":
         return episode
 
     gamma = 0.9
-    for i in range(20): # generate 20 episodes
+    for i in range(100): # generate 20 episodes
         Q = {}
         for (row,col) in q:
             Qsa = [q[row,col][aa]["val"] for aa in range(4)]
@@ -68,7 +68,7 @@ if __name__ == "__main__":
 
         print("Episode # ", i)
         env.current_episode  = i
-        episode = generateOneEpisode(wantToView=True,epsilon = 1/(1+i))
+        episode = generateOneEpisode(Q,wantToView=True,epsilon = 1/(1+i))
         C = 0
         for (state,action, reward) in reversed(episode):
             C = reward + gamma*C
@@ -77,5 +77,6 @@ if __name__ == "__main__":
             q[state][action]["count"] = q[state][action]["count"]+1 
 
     # run on Trained agent
-    generateOneEpisode(wantToView=True)
+    env.render(Q=Q)
+    generateOneEpisode(Q,wantToView=True)
     print("done")
