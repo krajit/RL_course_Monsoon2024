@@ -16,10 +16,13 @@ if __name__ == "__main__":
     env = maze.Maze()
     state = env.reset()
     env.render()
+    Q = {}
    
         
     # placeholder for saving q(s,a)s
-    q = defaultdict(lambda: defaultdict(lambda: {"val": -20 * np.random.rand(), "count": 1}))
+    # q = defaultdict(lambda: defaultdict(lambda: {"val": -20 * np.random.rand(), "count": 1}))
+    q = defaultdict(lambda: { a: {"val": -20 * np.random.rand(), "count": 1} for a in range(4)})
+    
 
 
     # policy function
@@ -27,35 +30,25 @@ if __name__ == "__main__":
         if np.random.rand() < epsilon:            # with epsilon probability return random action
             action = env.action_space.sample()
         else:
-            #action = max(q[state], key = q[state].get)  # return action with highest value
             action = max(q[state], key=lambda a: q[state][a]["val"])
         return action
 
     def generateOneEpisode(wantToView = False, epsilon = 0):
         state = env.reset()
-        if state not in q: q[state] = {}
         if wantToView:
-            env.render()
+            env.render(Q=Q)
         
         episode = []
-   
         done = False
         while not done:
             if wantToView:
                 for event in pygame.event.get():
                     if event.type == pygame.QUIT:
                         running = False
-
             action = pi(state,epsilon=epsilon)
-            
-
- #          actionMeaning = env.action_space.action_meanings[action]
             newState, reward, done, _ = env.step(action)
-            
             episode.append((state,action,reward))
             state = newState
-            if state not in q:
-                q[state] = {}
 
             if wantToView:
                 env.render(Q=Q)  
@@ -63,29 +56,21 @@ if __name__ == "__main__":
             #print(action, state, reward)
         return episode
 
-
     gamma = 0.9
-
     for i in range(20): # generate 20 episodes
         Q = {}
         for (row,col) in q:
-            if (row,col) == (4,4):
-                pass
-            qmax =  max([q[(row,col)][aa]["val"] for aa in q[(row,col)]])
-            qmin =  min([q[(row,col)][aa]["val"] for aa in q[(row,col)]])
-            for a in q[(row,col)]:
-                Q[(row,col,a)] = -(q[(row,col)][a]["val"] - qmin)/(qmax - qmin +0.1)
-
+            Qsa = [q[row,col][aa]["val"] for aa in range(4)]
+            QsaSort = list(np.argsort(Qsa))
+            QQ = [QsaSort.index(aa) for aa in range(4)]
+            for aa in range(4):
+                Q[row,col,aa] = QQ[aa]/3
 
         print("Episode # ", i)
         env.current_episode  = i
         episode = generateOneEpisode(wantToView=True,epsilon = 1/(1+i))
         C = 0
         for (state,action, reward) in reversed(episode):
-            if state not in q:
-                q[state] = {}
-            if action not in q[state]:
-                q[state][action] = {"val":-20*np.random.rand(), "count":1}
             C = reward + gamma*C
 
             q[state][action]["val"] +=(C -q[state][action]["val"] )/(q[state][action]["count"]) 

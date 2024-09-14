@@ -9,7 +9,7 @@ import itertools, time
 
 # Define color gradient
 START_COLOR = pygame.Color('red')
-END_COLOR = pygame.Color('blue')
+END_COLOR = pygame.Color('green')
 
 def interpolate_color(start_color, end_color, t):
     """ Interpolate between start_color and end_color based on t (0 to 1) """
@@ -96,23 +96,15 @@ class Maze(gym.Env):
                 xi = scale*i+scale//2
                 yi = scale*j+scale//2
                 h = scale//4
-                # action meaning: {0: 'UP', 1: 'RIGHT', 2: 'DOWN', 3: "LEFT"}
-                # if a==0: #up
-                #     gfxdraw.filled_polygon(surf, [(xi, yi+2*h), (xi-h, yi+h), (xi+h, yi+h)], value_to_color(Q[(i,j,a)]))
-                # elif a==1: #right
-                #     gfxdraw.filled_polygon(surf, [(xi+2*h, yi), (xi+h, yi+h), (xi+h, yi-h)], value_to_color(Q[(i,j,a)]))
-                # elif a==2: #down
-                #     gfxdraw.filled_polygon(surf, [(xi, yi-2*h), (xi-h, yi-h), (xi+h, yi-h)], value_to_color(Q[(i,j,a)]))
-                # elif a==3: #left
-                #     gfxdraw.filled_polygon(surf, [(xi-2*h, yi), (xi-h, yi-h), (xi-h, yi+h)], value_to_color(Q[(i,j,a)]))
+                #action meaning: {0: 'UP', 1: 'RIGHT', 2: 'DOWN', 3: "LEFT"}
                 if a==0: #up
-                    gfxdraw.filled_polygon(surf, [(xi, yi+2*h), (xi-h, yi+h), (xi+h, yi+h)], value_to_color(0))
+                    gfxdraw.filled_polygon(surf, [(xi, yi+2*h), (xi-h, yi+h), (xi+h, yi+h)], value_to_color(Q[(i,j,a)]))
                 elif a==1: #right
-                    gfxdraw.filled_polygon(surf, [(xi+2*h, yi), (xi+h, yi+h), (xi+h, yi-h)], value_to_color(0.25))
+                    gfxdraw.filled_polygon(surf, [(xi+2*h, yi), (xi+h, yi+h), (xi+h, yi-h)], value_to_color(Q[(i,j,a)]))
                 elif a==2: #down
-                    gfxdraw.filled_polygon(surf, [(xi, yi-2*h), (xi-h, yi-h), (xi+h, yi-h)], value_to_color(0.5))
+                    gfxdraw.filled_polygon(surf, [(xi, yi-2*h), (xi-h, yi-h), (xi+h, yi-h)], value_to_color(Q[(i,j,a)]))
                 elif a==3: #left
-                    gfxdraw.filled_polygon(surf, [(xi-2*h, yi), (xi-h, yi-h), (xi-h, yi+h)], value_to_color(1))
+                    gfxdraw.filled_polygon(surf, [(xi-2*h, yi), (xi-h, yi-h), (xi-h, yi+h)], value_to_color(Q[(i,j,a)]))
                 else:
                     raise("ValueError in action in Q")
                     
