@@ -46,7 +46,7 @@ def plot_predictions(epoch, model, X, y):
 plt.ion()  # Enable interactive mode
 
 # Train the non-linear model and visualize predictions at intervals
-epochs = 5000
+epochs = 1000
 for epoch in range(epochs):
     model.train()
     y_pred = model(X)
