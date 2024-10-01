@@ -39,17 +39,20 @@ def test_env(environment, episodes=10):
     return display_video(frames)
 
 
-import gym
-import numpy as np
-from IPython import display
-from matplotlib import pyplot as plt
-plt.close('all')
 
-env = gym.make('CartPole-v1')
-test_env(env, 10)
-env.close()
+# CODE STARTS RUNNING FROM HERE
+if __name__ == "__main__":
+    import gym
+    import numpy as np
+    from IPython import display
+    from matplotlib import pyplot as plt
+    plt.close('all')
+
+    env = gym.make('CartPole-v1')
+    test_env(env, 10)
+    env.close()
 
 
 
 
-print("done")
+    print("done")
