@@ -31,7 +31,7 @@ criterion = nn.MSELoss()  # Mean Squared Error loss
 optimizer = torch.optim.SGD(non_linear_model.parameters(), lr=0.01)  # Stochastic Gradient Descent
 
 # Set up TensorBoard writer
-writer = SummaryWriter('runs/non_linear_regression_with_validation')
+writer = SummaryWriter('runs/regression_experiments')
 
 # Visualization function
 def plot_predictions(epoch, model, X_train, y_train, X_val, y_val):
@@ -53,7 +53,7 @@ def plot_predictions(epoch, model, X_train, y_train, X_val, y_val):
 plt.ion()  # Enable interactive mode
 
 # Train the non-linear model and visualize predictions at intervals
-epochs = 1000
+epochs = 5000
 for epoch in range(epochs):
     # Train mode
     non_linear_model.train()
@@ -71,8 +71,8 @@ for epoch in range(epochs):
         val_loss = criterion(y_val_pred, y_val)
     
     # Log the training and validation loss to TensorBoard
-    writer.add_scalar('Training Loss', train_loss.item(), epoch)
-    writer.add_scalar('Validation Loss', val_loss.item(), epoch)
+    writer.add_scalar('Loss/train', train_loss.item(), epoch)
+    writer.add_scalar('Loss/validation', val_loss.item(), epoch)
 
     # Visualize every 100 epochs
     if (epoch+1) % 100 == 0:
