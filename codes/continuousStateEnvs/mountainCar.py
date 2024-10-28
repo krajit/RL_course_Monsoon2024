@@ -45,8 +45,8 @@ from IPython import display
 from matplotlib import pyplot as plt
 plt.close('all')
 
-#env = gym.make('MountainCar-v0')
-env = gym.make('Pendulum-v1')
+env = gym.make('MountainCar-v0')
+#env = gym.make('Pendulum-v1')
 test_env(env, 10)
 env.close()
 
