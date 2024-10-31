@@ -31,7 +31,7 @@ def test_env(environment, episodes=10):
 
         while not done:
             action = environment.action_space.sample()
-            next_state, reward, done, extra_info = environment.step(action)
+            next_state, reward, done,_, extra_info = environment.step(action)
             img = environment.render()#mode="rgb_array")
             frames.append(img)
             state = next_state

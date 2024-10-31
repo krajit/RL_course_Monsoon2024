@@ -1,7 +1,7 @@
 
 import matplotlib
 from matplotlib import animation
-from IPython.display import HTML
+#from IPython.display import HTML
 
 
 def display_video(frames):
@@ -44,7 +44,7 @@ def test_env(environment, episodes=10):
 if __name__ == "__main__":
     import gym
     import numpy as np
-    from IPython import display
+#    from IPython import display
     from matplotlib import pyplot as plt
     plt.close('all')
 
