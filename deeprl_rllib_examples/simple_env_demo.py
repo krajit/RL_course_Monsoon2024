@@ -7,7 +7,7 @@ import numpy as np
 
 #env = gym.make('MountainCar-v0', render_mode="human")
 #env = gym.make( 'Taxi-v3', render_mode="human")
-env = gym.make( 'CartPole-v0', render_mode="human")
+env = gym.make( 'CartPole-v1', render_mode="human")
 
 
 
