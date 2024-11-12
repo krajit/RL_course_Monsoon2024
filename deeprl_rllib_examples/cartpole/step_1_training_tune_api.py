@@ -1,10 +1,7 @@
-import gym
+#import gym
 from ray.rllib.algorithms.ppo import PPOConfig
 import numpy as np
 from ray import tune, air
-
-# Configure and create the CartPole environment
-env = gym.make('CartPole-v1', render_mode="human")
 
 # Configure PPO with a learning rate grid search
 config = (
@@ -18,7 +15,7 @@ tuner = tune.Tuner(
     "PPO",
     param_space=config.to_dict(),
     run_config=air.RunConfig(
-        stop={"episode_reward_mean": 150.0},
+        stop={"env_runners/episode_reward_mean": 300.0},
         checkpoint_config=air.CheckpointConfig(
             checkpoint_at_end=True  # Saves a checkpoint at the end of training
         )
@@ -29,5 +26,5 @@ tuner = tune.Tuner(
 results = tuner.fit()
 
 # Retrieve the best checkpoint from the results
-best_checkpoint = results.get_best_result().checkpoint
-print("Best checkpoint path:", best_checkpoint.uri)
+best_checkpoint = results.get_best_result(metric="env_runners/episode_reward_mean", mode="max").checkpoint
+print("Best checkpoint path:", best_checkpoint.path)
